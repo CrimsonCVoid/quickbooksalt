@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { saveSettings, uploadLogo } from "@/lib/actions/settings";
-import Image from "next/image";
+import { saveSettings } from "@/lib/actions/settings";
+import { LogoUploader } from "@/components/logo-uploader";
 
 type Initial = {
   business_name: string;
@@ -165,25 +165,7 @@ export function SettingsForm({ initial }: { initial: Initial }) {
         <button disabled={pending} className="btn btn-primary">{pending ? "Saving…" : "Save settings"}</button>
       </form>
 
-      <form
-        className="card space-y-3"
-        action={(fd) => start(async () => {
-          setMsg(null); setError(null);
-          const res = await uploadLogo(fd);
-          if (res?.error) setError(res.error);
-          else { setLogoUrl(res?.url ?? null); setMsg("Logo updated ✓"); }
-        })}
-      >
-        <h2 className="display text-2xl">Logo</h2>
-        {logoUrl && (
-          <div className="rounded-lg border border-fm-line p-4 bg-fm-paper inline-block">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={logoUrl} alt="Logo" style={{ maxHeight: 80 }} />
-          </div>
-        )}
-        <input type="file" name="logo" accept="image/png,image/jpeg,image/svg+xml" className="block text-sm" />
-        <button disabled={pending} className="btn btn-secondary">{pending ? "Uploading…" : "Upload logo"}</button>
-      </form>
+      <LogoUploader initialUrl={logoUrl} />
     </div>
   );
 }

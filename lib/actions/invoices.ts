@@ -46,9 +46,11 @@ export async function createInvoice(input: z.infer<typeof CreateSchema>) {
     .maybeSingle();
 
   const subtotal = lineItemsTotal(parsed.data.lines);
-  const billToAddress = [customer.billing_line1, customer.billing_line2, [customer.billing_city, customer.billing_state, customer.billing_postal].filter(Boolean).join(", ")]
-    .filter(Boolean)
-    .join("\n");
+  const billToAddress = [
+    customer.billing_line1,
+    customer.billing_line2,
+    [customer.billing_city, [customer.billing_state, customer.billing_postal].filter(Boolean).join(" ")].filter(Boolean).join(", "),
+  ].filter(Boolean).join("\n");
   const termsDays = parsed.data.payment_terms_days ?? customer.payment_terms_days ?? 15;
   const invoiceNumber = await allocateInvoiceNumber(supabase as any, user.id);
 

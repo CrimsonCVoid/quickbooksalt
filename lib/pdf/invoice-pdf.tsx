@@ -167,7 +167,13 @@ export function InvoicePDF({ invoice }: { invoice: PdfInvoice }) {
               </Text>
             )}
             <Text style={s.tagline}>{brand.tagline}</Text>
-            {invoice.business.address && <Text style={{ color: C.muted, marginTop: 6 }}>{invoice.business.address}</Text>}
+            {invoice.business.address && (
+              <View style={{ marginTop: 6 }}>
+                {invoice.business.address.split("\n").filter(Boolean).map((line, i) => (
+                  <Text key={i} style={{ color: C.muted }}>{line}</Text>
+                ))}
+              </View>
+            )}
             {invoice.business.phone && <Text style={{ color: C.muted }}>{invoice.business.phone}</Text>}
             {invoice.business.email && <Text style={{ color: C.muted }}>{invoice.business.email}</Text>}
           </View>
@@ -184,7 +190,13 @@ export function InvoicePDF({ invoice }: { invoice: PdfInvoice }) {
             <Text style={s.partyName}>{invoice.bill_to_company}</Text>
             {invoice.bill_to_contact && <Text>{invoice.bill_to_contact}</Text>}
             {invoice.bill_to_email && <Text style={{ color: C.muted }}>{invoice.bill_to_email}</Text>}
-            {invoice.bill_to_address && <Text style={{ color: C.muted, marginTop: 2 }}>{invoice.bill_to_address}</Text>}
+            {invoice.bill_to_address && (
+              <View style={{ marginTop: 2 }}>
+                {invoice.bill_to_address.split("\n").filter(Boolean).map((line, i) => (
+                  <Text key={i} style={{ color: C.muted }}>{line}</Text>
+                ))}
+              </View>
+            )}
           </View>
           <View style={[s.partyCol, { alignItems: "flex-end" }]}>
             <View style={s.metaRow}><Text style={s.label}>Issued</Text><Text style={{ marginLeft: 12 }}>{invoice.issue_date}</Text></View>

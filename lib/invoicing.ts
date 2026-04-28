@@ -169,9 +169,11 @@ export async function generateInvoiceFromPlan(
   const subtotal = lineItemsTotal(lines);
   const total = subtotal; // tax handling can be added later
 
-  const billToAddress = [customer.billing_line1, customer.billing_line2, [customer.billing_city, customer.billing_state, customer.billing_postal].filter(Boolean).join(", ")]
-    .filter(Boolean)
-    .join("\n");
+  const billToAddress = [
+    customer.billing_line1,
+    customer.billing_line2,
+    [customer.billing_city, [customer.billing_state, customer.billing_postal].filter(Boolean).join(" ")].filter(Boolean).join(", "),
+  ].filter(Boolean).join("\n");
 
   const invoiceNumber = await allocateInvoiceNumber(supabase, ownerId);
 

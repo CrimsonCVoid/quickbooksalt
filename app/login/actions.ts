@@ -1,13 +1,23 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
+/**
+ * Email + password sign-in for the single-tenant owner.
+ * On first login, auto-creates the account (no email confirmation needed) using the password
+ * the owner typed. Subsequent logins use the same password.
+ *
+ * Why no email confirmation: this is a single-user internal tool with the owner email
+ * pinned via OWNER_EMAIL — the magic-link round-trip adds friction without security gain.
+ */
 export async function loginAction(formData: FormData) {
   const email = String(formData.get("email") || "").trim().toLowerCase();
+  const password = String(formData.get("password") || "");
   const next = String(formData.get("next") || "/admin");
 
-  if (!email) redirect("/login?error=Email+required");
+  if (!email || !password) redirect("/login?error=Email+and+password+required");
+  if (password.length < 8) redirect("/login?error=Password+must+be+at+least+8+characters");
 
   const ownerEmail = process.env.OWNER_EMAIL?.toLowerCase();
   if (ownerEmail && email !== ownerEmail) {
@@ -15,17 +25,37 @@ export async function loginAction(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-  const { error } = await supabase.auth.signInWithOtp({
+  // Try sign-in first
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (!error) redirect(next);
+
+  // If that failed, see if the user exists at all. If not, create them on the fly.
+  const admin = createServiceClient();
+  const { data: list, error: listErr } = await admin.auth.admin.listUsers();
+  if (listErr) redirect(`/login?error=${encodeURIComponent(listErr.message)}`);
+
+  const exists = list.users.some(
+    (u: { email?: string | null }) => u.email?.toLowerCase() === email
+  );
+
+  if (exists) {
+    // User exists — wrong password
+    redirect("/login?error=Invalid+password");
+  }
+
+  // First-time setup: create the owner with email_confirm so they can sign in immediately
+  const { error: createErr } = await admin.auth.admin.createUser({
     email,
-    options: {
-      emailRedirectTo: `${appUrl}/auth/callback?next=${encodeURIComponent(next)}`,
-    },
+    password,
+    email_confirm: true,
   });
+  if (createErr) redirect(`/login?error=${encodeURIComponent(createErr.message)}`);
 
-  if (error) redirect(`/login?error=${encodeURIComponent(error.message)}`);
-  redirect("/login?sent=1");
+  const { error: postCreateErr } = await supabase.auth.signInWithPassword({ email, password });
+  if (postCreateErr) redirect(`/login?error=${encodeURIComponent(postCreateErr.message)}`);
+
+  redirect(next);
 }
 
 export async function logoutAction() {

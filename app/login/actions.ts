@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { isOwner } from "@/lib/owner";
 import { redirect } from "next/navigation";
 
 /**
@@ -19,8 +20,7 @@ export async function loginAction(formData: FormData) {
   if (!email || !password) redirect("/login?error=Email+and+password+required");
   if (password.length < 8) redirect("/login?error=Password+must+be+at+least+8+characters");
 
-  const ownerEmail = process.env.OWNER_EMAIL?.toLowerCase();
-  if (ownerEmail && email !== ownerEmail) {
+  if (!isOwner(email)) {
     redirect("/login?error=not_authorized");
   }
 

@@ -5,50 +5,216 @@ import {
   View,
   StyleSheet,
   Image,
-  Font,
 } from "@react-pdf/renderer";
-import { brand } from "@/lib/branding";
 
-// Use Helvetica as the safe built-in for production. Custom fonts can be wired later via Font.register.
+/**
+ * Invoice PDF — black & white, print-optimized.
+ *
+ * Design rules:
+ *  - Pure black on white (no grays, no fills) so it photocopies and prints crisply.
+ *  - Hierarchy from type weight, size, and rules — never from color.
+ *  - Helvetica + Helvetica-Bold (built into the PDF spec, no embedding required).
+ *  - Generous whitespace; uppercase tracked labels.
+ *  - Strong section rules (1pt/2pt). Double rule on grand-total for emphasis.
+ *
+ * Anything user-customizable (business name, address, accent color, etc.) flows
+ * through the `business` prop. Color is intentionally ignored here — the PDF stays B&W.
+ */
 
-const C = {
-  ink: brand.colors.ink,
-  yellow: brand.colors.yellow,
-  paper: brand.colors.paper,
-  line: brand.colors.line,
-  muted: brand.colors.muted,
-};
+const INK = "#000000";
+const WHITE = "#FFFFFF";
 
 const s = StyleSheet.create({
-  page: { padding: 40, fontSize: 10, fontFamily: "Helvetica", color: C.ink, backgroundColor: "#FFFFFF" },
-  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 },
-  brandName: { fontSize: 28, fontFamily: "Helvetica-Bold", letterSpacing: -0.5 },
-  brandHighlight: { backgroundColor: C.yellow, paddingHorizontal: 4 },
-  tagline: { color: C.muted, marginTop: 2 },
-  invMeta: { textAlign: "right" },
-  invNumber: { fontSize: 16, fontFamily: "Helvetica-Bold" },
-  pillSent: { marginTop: 4, alignSelf: "flex-end", paddingHorizontal: 6, paddingVertical: 2, backgroundColor: C.yellow, borderRadius: 4 },
-  partiesRow: { flexDirection: "row", marginTop: 20, marginBottom: 20 },
-  partyCol: { flex: 1, paddingRight: 12 },
-  label: { fontSize: 8, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 },
-  partyName: { fontFamily: "Helvetica-Bold" },
-  metaRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 4 },
-  table: { borderTop: 1, borderColor: C.ink, marginTop: 16 },
-  tHead: { flexDirection: "row", paddingVertical: 6, borderBottom: 1, borderColor: C.ink, fontFamily: "Helvetica-Bold", fontSize: 9, textTransform: "uppercase" },
-  tRow: { flexDirection: "row", paddingVertical: 8, borderBottom: 0.5, borderColor: C.line },
-  tDesc: { flex: 4 },
+  page: {
+    paddingTop: 50,
+    paddingBottom: 60,
+    paddingHorizontal: 50,
+    fontSize: 10,
+    fontFamily: "Helvetica",
+    color: INK,
+    backgroundColor: WHITE,
+    lineHeight: 1.4,
+  },
+
+  // Header block
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 6,
+  },
+  brandBlock: { flex: 1, paddingRight: 24 },
+  brandName: {
+    fontSize: 22,
+    fontFamily: "Helvetica-Bold",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  brandRule: {
+    width: 40,
+    height: 2,
+    backgroundColor: INK,
+    marginTop: 6,
+    marginBottom: 8,
+  },
+  brandMeta: { fontSize: 9, color: INK },
+  brandMetaRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+
+  invMeta: { width: 200, alignItems: "flex-end" },
+  invLabel: {
+    fontSize: 9,
+    fontFamily: "Helvetica-Bold",
+    letterSpacing: 2,
+    textTransform: "uppercase",
+  },
+  invNumber: {
+    fontSize: 16,
+    fontFamily: "Helvetica-Bold",
+    marginTop: 2,
+    marginBottom: 10,
+  },
+  invMetaTable: { width: "100%" },
+  invMetaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 2,
+    fontSize: 9,
+  },
+  invMetaKey: { letterSpacing: 1, textTransform: "uppercase", fontFamily: "Helvetica-Bold" },
+  invMetaVal: {},
+
+  // Status stamp (PAID / VOID) — bordered, no fill
+  stamp: {
+    marginTop: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderWidth: 2,
+    borderColor: INK,
+    alignSelf: "flex-end",
+  },
+  stampText: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 14,
+    letterSpacing: 3,
+    textTransform: "uppercase",
+  },
+
+  // Major divider between letterhead and body
+  thickRule: { height: 2, backgroundColor: INK, marginVertical: 16 },
+
+  // Bill-to + parties
+  partiesRow: { flexDirection: "row", marginBottom: 18 },
+  partyCol: { flex: 1, paddingRight: 16 },
+  sectionLabel: {
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  partyName: { fontFamily: "Helvetica-Bold", fontSize: 11 },
+  partyLine: { fontSize: 10 },
+
+  // Items table
+  table: { marginTop: 4 },
+  tHead: {
+    flexDirection: "row",
+    paddingVertical: 6,
+    borderTopWidth: 1.5,
+    borderBottomWidth: 1,
+    borderColor: INK,
+    fontFamily: "Helvetica-Bold",
+    fontSize: 9,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
+  tRow: {
+    flexDirection: "row",
+    paddingVertical: 7,
+    borderBottomWidth: 0.5,
+    borderColor: INK,
+  },
+  tDesc: { flex: 5, paddingRight: 6 },
   tQty: { flex: 1, textAlign: "right" },
-  tPrice: { flex: 1.2, textAlign: "right" },
-  tTotal: { flex: 1.2, textAlign: "right" },
-  totalsBlock: { alignSelf: "flex-end", width: 240, marginTop: 16 },
-  totalsRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 3 },
-  grandTotalRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 8, marginTop: 4, backgroundColor: C.yellow, paddingHorizontal: 8 },
-  grandTotalText: { fontFamily: "Helvetica-Bold", fontSize: 14 },
-  payBlock: { marginTop: 32, padding: 12, backgroundColor: C.paper, borderRadius: 4 },
-  payTitle: { fontFamily: "Helvetica-Bold", marginBottom: 4 },
-  signatureBlock: { marginTop: 32, paddingTop: 12, borderTop: 0.5, borderColor: C.line, flexDirection: "row", justifyContent: "space-between" },
-  signatureBox: { width: 220, paddingTop: 6, borderTop: 0.5, borderColor: C.ink },
-  footer: { position: "absolute", bottom: 30, left: 40, right: 40, textAlign: "center", color: C.muted, fontSize: 8 },
+  tPrice: { flex: 1.4, textAlign: "right" },
+  tTotal: { flex: 1.4, textAlign: "right" },
+
+  // Totals
+  totalsWrap: { flexDirection: "row", justifyContent: "flex-end", marginTop: 18 },
+  totalsBlock: { width: 260 },
+  totalsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 3,
+    fontSize: 10,
+  },
+  totalsRowMuted: { paddingVertical: 2, fontSize: 9 },
+  // Grand total: double rule top + bottom
+  grandRuleTop: { height: 1, backgroundColor: INK, marginTop: 6 },
+  grandRuleTopThick: { height: 0.5, backgroundColor: INK, marginTop: 1 },
+  grandRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 6,
+    fontSize: 12,
+    fontFamily: "Helvetica-Bold",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  grandRuleBottom: { height: 0.5, backgroundColor: INK },
+  grandRuleBottomThick: { height: 1, backgroundColor: INK, marginTop: 1 },
+
+  // Notes
+  notesBlock: { marginTop: 22 },
+
+  // Payment instructions — bordered frame, no fill
+  payFrame: {
+    marginTop: 22,
+    borderWidth: 1,
+    borderColor: INK,
+    padding: 14,
+  },
+  payTitle: {
+    fontSize: 10,
+    fontFamily: "Helvetica-Bold",
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    marginBottom: 6,
+  },
+  payBody: { fontSize: 10 },
+
+  // Signature
+  sigRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 36,
+  },
+  sigCol: { width: "45%" },
+  sigEmbedded: { height: 40, marginBottom: 4 },
+  sigLine: { borderTopWidth: 1, borderColor: INK, paddingTop: 4 },
+  sigLabel: {
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+  },
+  sigMeta: { fontSize: 8, color: INK },
+
+  // Footer
+  footer: {
+    position: "absolute",
+    bottom: 30,
+    left: 50,
+    right: 50,
+    fontSize: 8,
+    color: INK,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    borderTopWidth: 0.5,
+    borderColor: INK,
+    paddingTop: 6,
+  },
+  footerLabel: { letterSpacing: 1, textTransform: "uppercase" },
 });
 
 export type PdfInvoice = {
@@ -73,7 +239,7 @@ export type PdfInvoice = {
     unit_price: number;
     line_total: number;
   }>;
-  signature_png_data?: string | null;     // optional embedded signature
+  signature_png_data?: string | null;
   signature_signer?: string | null;
   signed_at?: string | null;
   business: {
@@ -89,53 +255,103 @@ export type PdfInvoice = {
 const fmt = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
+function humanDate(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  // Accept "YYYY-MM-DD" or full ISO; format as "April 27, 2026".
+  const safe = iso.length === 10 ? `${iso}T00:00:00` : iso;
+  const d = new Date(safe);
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
+
 export function InvoicePDF({ invoice }: { invoice: PdfInvoice }) {
   const balance = invoice.total - invoice.amount_paid;
+  const stamp =
+    invoice.status === "paid" ? "Paid" :
+    invoice.status === "void" ? "Void" :
+    invoice.status === "overdue" ? "Past Due" :
+    null;
+
   return (
-    <Document>
+    <Document
+      title={`Invoice ${invoice.invoice_number}`}
+      author={invoice.business.name}
+      subject={`Invoice ${invoice.invoice_number}`}
+    >
       <Page size="LETTER" style={s.page}>
+        {/* ── Letterhead ─────────────────────────────────────────── */}
         <View style={s.headerRow}>
-          <View>
-            {invoice.business.logoUrl ? (
-              <Image src={invoice.business.logoUrl} style={{ width: 110, height: 110, marginBottom: 6 }} />
-            ) : (
-              <Text style={s.brandName}>
-                {invoice.business.name.split(" ")[0]} <Text style={s.brandHighlight}>{invoice.business.name.split(" ").slice(1).join(" ") || ""}</Text>
-              </Text>
+          <View style={s.brandBlock}>
+            {invoice.business.logoUrl && (
+              <Image src={invoice.business.logoUrl} style={{ width: 90, height: 90, marginBottom: 8 }} />
             )}
-            <Text style={s.tagline}>{brand.tagline}</Text>
-            {invoice.business.address && <Text style={{ color: C.muted, marginTop: 6 }}>{invoice.business.address}</Text>}
-            {invoice.business.phone && <Text style={{ color: C.muted }}>{invoice.business.phone}</Text>}
-            {invoice.business.email && <Text style={{ color: C.muted }}>{invoice.business.email}</Text>}
+            <Text style={s.brandName}>{invoice.business.name}</Text>
+            <View style={s.brandRule} />
+            {invoice.business.address && (
+              <Text style={s.brandMeta}>{invoice.business.address}</Text>
+            )}
+            {(invoice.business.phone || invoice.business.email) && (
+              <View style={s.brandMetaRow}>
+                {invoice.business.phone && <Text style={s.brandMeta}>{invoice.business.phone}</Text>}
+                {invoice.business.phone && invoice.business.email && <Text style={s.brandMeta}>·</Text>}
+                {invoice.business.email && <Text style={s.brandMeta}>{invoice.business.email}</Text>}
+              </View>
+            )}
           </View>
+
           <View style={s.invMeta}>
-            <Text style={s.label}>Invoice</Text>
-            <Text style={s.invNumber}>{invoice.invoice_number}</Text>
-            {invoice.status === "paid" && <View style={s.pillSent}><Text style={{ fontFamily: "Helvetica-Bold" }}>PAID</Text></View>}
+            <Text style={s.invLabel}>Invoice</Text>
+            <Text style={s.invNumber}>#{invoice.invoice_number}</Text>
+
+            <View style={s.invMetaTable}>
+              <View style={s.invMetaRow}>
+                <Text style={s.invMetaKey}>Issued</Text>
+                <Text style={s.invMetaVal}>{humanDate(invoice.issue_date)}</Text>
+              </View>
+              <View style={s.invMetaRow}>
+                <Text style={s.invMetaKey}>Due</Text>
+                <Text style={s.invMetaVal}>{humanDate(invoice.due_date)}</Text>
+              </View>
+              {invoice.payment_terms && (
+                <View style={s.invMetaRow}>
+                  <Text style={s.invMetaKey}>Terms</Text>
+                  <Text style={s.invMetaVal}>{invoice.payment_terms}</Text>
+                </View>
+              )}
+            </View>
+
+            {stamp && (
+              <View style={s.stamp}>
+                <Text style={s.stampText}>{stamp}</Text>
+              </View>
+            )}
           </View>
         </View>
 
+        <View style={s.thickRule} />
+
+        {/* ── Bill to ────────────────────────────────────────────── */}
         <View style={s.partiesRow}>
           <View style={s.partyCol}>
-            <Text style={s.label}>Bill to</Text>
+            <Text style={s.sectionLabel}>Bill To</Text>
             <Text style={s.partyName}>{invoice.bill_to_company}</Text>
-            {invoice.bill_to_contact && <Text>{invoice.bill_to_contact}</Text>}
-            {invoice.bill_to_email && <Text style={{ color: C.muted }}>{invoice.bill_to_email}</Text>}
-            {invoice.bill_to_address && <Text style={{ color: C.muted, marginTop: 2 }}>{invoice.bill_to_address}</Text>}
-          </View>
-          <View style={[s.partyCol, { alignItems: "flex-end" }]}>
-            <View style={s.metaRow}><Text style={s.label}>Issued</Text><Text style={{ marginLeft: 12 }}>{invoice.issue_date}</Text></View>
-            <View style={s.metaRow}><Text style={s.label}>Due</Text><Text style={{ marginLeft: 12 }}>{invoice.due_date}</Text></View>
-            {invoice.payment_terms && <View style={s.metaRow}><Text style={s.label}>Terms</Text><Text style={{ marginLeft: 12 }}>{invoice.payment_terms}</Text></View>}
+            {invoice.bill_to_contact && <Text style={s.partyLine}>{invoice.bill_to_contact}</Text>}
+            {invoice.bill_to_address && (
+              <Text style={[s.partyLine, { marginTop: 2 }]}>{invoice.bill_to_address}</Text>
+            )}
+            {invoice.bill_to_email && (
+              <Text style={[s.partyLine, { marginTop: 2 }]}>{invoice.bill_to_email}</Text>
+            )}
           </View>
         </View>
 
+        {/* ── Line items ────────────────────────────────────────── */}
         <View style={s.table}>
           <View style={s.tHead}>
             <Text style={s.tDesc}>Description</Text>
             <Text style={s.tQty}>Qty</Text>
-            <Text style={s.tPrice}>Unit</Text>
-            <Text style={s.tTotal}>Total</Text>
+            <Text style={s.tPrice}>Unit Price</Text>
+            <Text style={s.tTotal}>Amount</Text>
           </View>
           {invoice.lines.map((l, i) => (
             <View key={i} style={s.tRow} wrap={false}>
@@ -147,53 +363,88 @@ export function InvoicePDF({ invoice }: { invoice: PdfInvoice }) {
           ))}
         </View>
 
-        <View style={s.totalsBlock}>
-          <View style={s.totalsRow}><Text>Subtotal</Text><Text>{fmt(invoice.subtotal)}</Text></View>
-          {invoice.tax > 0 && <View style={s.totalsRow}><Text>Tax</Text><Text>{fmt(invoice.tax)}</Text></View>}
-          <View style={s.totalsRow}><Text style={{ color: C.muted }}>Amount paid</Text><Text style={{ color: C.muted }}>{fmt(invoice.amount_paid)}</Text></View>
-          <View style={s.grandTotalRow}>
-            <Text style={s.grandTotalText}>Balance due</Text>
-            <Text style={s.grandTotalText}>{fmt(balance)}</Text>
+        {/* ── Totals ────────────────────────────────────────────── */}
+        <View style={s.totalsWrap}>
+          <View style={s.totalsBlock}>
+            <View style={s.totalsRow}>
+              <Text>Subtotal</Text>
+              <Text>{fmt(invoice.subtotal)}</Text>
+            </View>
+            {invoice.tax > 0 && (
+              <View style={s.totalsRow}>
+                <Text>Tax</Text>
+                <Text>{fmt(invoice.tax)}</Text>
+              </View>
+            )}
+            {invoice.amount_paid > 0 && (
+              <View style={s.totalsRowMuted}>
+                <Text>Less: payments received</Text>
+                <Text>−{fmt(invoice.amount_paid)}</Text>
+              </View>
+            )}
+
+            <View style={s.grandRuleTop} />
+            <View style={s.grandRuleTopThick} />
+            <View style={s.grandRow}>
+              <Text>Balance Due</Text>
+              <Text>{fmt(balance)}</Text>
+            </View>
+            <View style={s.grandRuleBottom} />
+            <View style={s.grandRuleBottomThick} />
           </View>
         </View>
 
+        {/* ── Notes ─────────────────────────────────────────────── */}
         {invoice.notes && (
-          <View style={{ marginTop: 16 }}>
-            <Text style={s.label}>Notes</Text>
+          <View style={s.notesBlock} wrap={false}>
+            <Text style={s.sectionLabel}>Notes</Text>
             <Text>{invoice.notes}</Text>
           </View>
         )}
 
-        <View style={s.payBlock}>
-          <Text style={s.payTitle}>How to pay</Text>
-          {invoice.check_instructions ? (
-            <Text>{invoice.check_instructions}</Text>
-          ) : (
-            <Text style={{ color: C.muted }}>Mail check or pay online via the link in the email.</Text>
-          )}
+        {/* ── Payment instructions ──────────────────────────────── */}
+        <View style={s.payFrame} wrap={false}>
+          <Text style={s.payTitle}>Payment Instructions</Text>
+          <Text style={s.payBody}>
+            {invoice.check_instructions ||
+              `Make checks payable to: ${invoice.business.name}.\nReference invoice number on the memo line.`}
+          </Text>
           {invoice.payUrl && (
-            <Text style={{ marginTop: 6 }}>Pay online: <Text style={{ color: C.ink, textDecoration: "underline" }}>{invoice.payUrl}</Text></Text>
+            <Text style={[s.payBody, { marginTop: 6 }]}>
+              To pay online, visit: {invoice.payUrl}
+            </Text>
           )}
         </View>
 
-        <View style={s.signatureBlock}>
-          <View style={s.signatureBox}>
+        {/* ── Signatures ────────────────────────────────────────── */}
+        <View style={s.sigRow} wrap={false}>
+          <View style={s.sigCol}>
             {invoice.signature_png_data && (
-              <Image src={invoice.signature_png_data} style={{ height: 50, marginBottom: 4 }} />
+              <Image src={invoice.signature_png_data} style={s.sigEmbedded} />
             )}
-            <Text style={{ fontSize: 8, color: C.muted }}>
-              Signature{invoice.signature_signer ? ` — ${invoice.signature_signer}` : ""}
-              {invoice.signed_at ? ` (${invoice.signed_at})` : ""}
-            </Text>
+            <View style={s.sigLine} />
+            <Text style={s.sigLabel}>Customer Signature</Text>
+            {invoice.signature_signer && (
+              <Text style={s.sigMeta}>{invoice.signature_signer}</Text>
+            )}
+            {invoice.signed_at && (
+              <Text style={s.sigMeta}>Signed {humanDate(invoice.signed_at)}</Text>
+            )}
           </View>
-          <View style={[s.signatureBox, { alignSelf: "flex-end" }]}>
-            <Text style={{ fontSize: 8, color: C.muted }}>Date</Text>
+          <View style={s.sigCol}>
+            <View style={[s.sigLine, { marginTop: 36 }]} />
+            <Text style={s.sigLabel}>Date</Text>
           </View>
         </View>
 
-        <Text style={s.footer} fixed>
-          {invoice.business.name} — Invoice {invoice.invoice_number}
-        </Text>
+        {/* ── Footer (every page) ───────────────────────────────── */}
+        <View style={s.footer} fixed>
+          <Text style={s.footerLabel}>{invoice.business.name}</Text>
+          <Text>Invoice #{invoice.invoice_number}</Text>
+          <Text
+            render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`}
+          />
+        </View>
       </Page>
     </Document>
   );

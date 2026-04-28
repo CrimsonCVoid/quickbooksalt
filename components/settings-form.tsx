@@ -76,7 +76,7 @@ export function SettingsForm({ initial }: { initial: Initial }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="label">Resend "From" address</label>
-            <input name="resend_from_email" defaultValue={initial.resend_from_email} placeholder="billing@filtermonkey.com" className="input" />
+            <input name="resend_from_email" defaultValue={initial.resend_from_email} placeholder="billing@carolinacomfort.info" className="input" />
             <p className="text-xs text-fm-muted mt-1">Must be a verified domain in your Resend dashboard.</p>
           </div>
           <div>

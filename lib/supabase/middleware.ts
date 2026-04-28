@@ -53,13 +53,15 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Owner-only gate: only the configured email can access /admin
-  const ownerEmail = process.env.OWNER_EMAIL?.toLowerCase();
-  if ((isAdmin || isApiAdmin) && user && ownerEmail && user.email?.toLowerCase() !== ownerEmail) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("error", "not_authorized");
-    return NextResponse.redirect(url);
+  // Owner-only gate: only configured emails can access /admin (supports comma list)
+  if ((isAdmin || isApiAdmin) && user) {
+    const { isOwner } = await import("@/lib/owner");
+    if (!isOwner(user.email)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("error", "not_authorized");
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;

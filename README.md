@@ -1,4 +1,4 @@
-# Filter Monkey Invoicing
+# Carolina Comfort HVAC — Invoicing
 
 Recurring invoicing system for HVAC filter-service businesses. Built for one operator (you). Deploys to Vercel.
 
@@ -36,7 +36,7 @@ Recurring invoicing system for HVAC filter-service businesses. Built for one ope
 ### 2) Resend (email)
 
 1. Sign up at [resend.com](https://resend.com), create an API key.
-2. Add the domain you'll send from (e.g. `filtermonkey.com`) and complete the DNS records. **Sender email must be on a verified domain.**
+2. Add the domain you'll send from (e.g. `carolinacomfort.info`) and complete the DNS records. **Sender email must be on a verified domain.**
 3. Set `RESEND_API_KEY` and `RESEND_FROM_EMAIL` in env.
 
 ### 3) Stripe — currently DISABLED

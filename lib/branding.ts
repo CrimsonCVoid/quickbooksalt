@@ -3,10 +3,11 @@
  * table — read via `getSettings()`. This file is the fallback / build-time defaults.
  */
 export const brand = {
-  name: "Filter Monkey",
-  tagline: "The right filter, delivered.",
-  domain: "filtermonkey.com",
+  name: "Carolina Comfort HVAC",
+  tagline: "Filter service & maintenance.",
+  domain: "carolinacomfort.info",
 
+  // UI tokens for the admin web app. The PDF intentionally renders pure B&W.
   colors: {
     yellow: "#FFD60A",
     yellowDark: "#E6BD00",
@@ -23,16 +24,16 @@ export const brand = {
 
   /** Default check-payment instructions — overridable in /admin/settings */
   defaultCheckInstructions: [
-    "Make checks payable to: Filter Monkey LLC",
-    "Mail to: PO Box ___, ___, ___",
+    "Make checks payable to: Carolina Comfort HVAC",
+    "Mail to: __ Street, ____, NC ____",
     "Reference invoice number on memo line.",
   ].join("\n"),
 
   /** Default payment terms (Net N) */
   defaultPaymentTermsDays: 15,
 
-  /** Default invoice number prefix — e.g. FM-2026-0001 */
-  invoiceNumberPrefix: "FM",
+  /** Default invoice number prefix — e.g. CCH-2026-0001 */
+  invoiceNumberPrefix: "CCH",
 } as const;
 
 export type Brand = typeof brand;

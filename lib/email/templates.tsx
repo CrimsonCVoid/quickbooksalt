@@ -31,7 +31,8 @@ type InvoiceEmailProps = {
   total: string;
   dueDate: string;
   contactName: string | null;
-  signUrl: string;
+  /** Opens the invoice PDF directly in a new tab — no review/sign page in the way. */
+  viewUrl: string;
   payUrl: string | null;
   checkInstructions: string | null;
   signature: string | null;
@@ -43,7 +44,7 @@ export function InvoiceEmail({
   total,
   dueDate,
   contactName,
-  signUrl,
+  viewUrl,
   payUrl,
   checkInstructions,
   signature,
@@ -63,7 +64,7 @@ export function InvoiceEmail({
             Total <strong>{total}</strong> — due <strong>{dueDate}</strong>.
           </Text>
           <Section style={{ margin: "20px 0" }}>
-            <Button href={signUrl} style={styles.button}>Review &amp; sign</Button>
+            <Button href={viewUrl} style={styles.button}>View invoice</Button>
             {payUrl && <Button href={payUrl} style={styles.buttonAlt}>Pay online</Button>}
           </Section>
           {checkInstructions && (

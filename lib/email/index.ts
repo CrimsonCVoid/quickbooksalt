@@ -49,7 +49,10 @@ export async function sendInvoiceEmail(invoiceId: string): Promise<{ ok?: boolea
   const settings = await getSettings(inv.owner_id);
   const businessName = settings?.business_name || brand.name;
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "";
-  const signUrl = `${baseUrl}/sign/${inv.public_token}`;
+  // Email links straight to the PDF — no "Review & sign" interstitial.
+  // Browsers render application/pdf inline, so the recipient sees the invoice
+  // immediately in a new tab. Signatures happen in person via the contractor's phone.
+  const viewUrl = `${baseUrl}/api/public/invoices/${inv.public_token}/pdf`;
   const payUrl = settings?.stripe_enabled ? `${baseUrl}/pay/${inv.public_token}` : null;
 
   let pdfBuffer: Buffer;
@@ -67,7 +70,7 @@ export async function sendInvoiceEmail(invoiceId: string): Promise<{ ok?: boolea
       total: fmt(Number(inv.total)),
       dueDate: format(new Date(inv.due_date), "MMM d, yyyy"),
       contactName: inv.bill_to_contact,
-      signUrl,
+      viewUrl,
       payUrl,
       checkInstructions: inv.check_instructions || settings?.check_instructions || null,
       signature: settings?.email_signature || null,

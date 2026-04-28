@@ -60,10 +60,8 @@ export default async function InvoiceDetail({ params }: { params: Promise<{ id: 
               <div>
                 <p className="text-xs uppercase tracking-wider text-fm-muted">Terms</p>
                 <p>{invoice.payment_terms || "—"}</p>
-                <p className="text-xs uppercase tracking-wider text-fm-muted mt-3">Public links</p>
+                <p className="text-xs uppercase tracking-wider text-fm-muted mt-3">Public sign link</p>
                 <a className="text-xs underline break-all" href={signUrl}>{signUrl}</a>
-                <br/>
-                <a className="text-xs underline break-all" href={payUrl}>{payUrl}</a>
               </div>
             </div>
 

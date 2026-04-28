@@ -39,11 +39,17 @@ Recurring invoicing system for HVAC filter-service businesses. Built for one ope
 2. Add the domain you'll send from (e.g. `filtermonkey.com`) and complete the DNS records. **Sender email must be on a verified domain.**
 3. Set `RESEND_API_KEY` and `RESEND_FROM_EMAIL` in env.
 
-### 3) Stripe (optional — only the rare online payer needs this)
+### 3) Stripe — currently DISABLED
 
-1. Sign up at [stripe.com](https://stripe.com), grab API keys.
-2. Set `STRIPE_SECRET_KEY` + `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` in env.
-3. After deploying to Vercel, add a webhook endpoint at `https://yourdomain.com/api/stripe/webhook` for the `checkout.session.completed` event, copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
+Online payments are turned off — every client pays by check. Record the check# and deposit date right on the invoice page; the system flips the invoice to paid automatically.
+
+To turn online pay back on later:
+1. Add Stripe keys to env (the entries are commented out in `.env.example`).
+2. In the DB, set `update settings set stripe_enabled = true where owner_id = '...';`.
+3. Restore the toggle in `components/settings-form.tsx` (replace the disabled `<input>` with the original `name="stripe_enabled"` checkbox).
+4. Add `https://yourdomain.com/api/stripe/webhook` as a webhook endpoint in Stripe for `checkout.session.completed` and copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
+
+The Stripe routes (`/pay/[token]`, `/api/stripe/webhook`, `/api/public/invoices/[token]/checkout`) stay deployed but are no-ops while `stripe_enabled` is false — the public pay page renders a "not enabled" message and emails/PDFs omit the pay link.
 
 ### 4) Local development
 

@@ -97,9 +97,9 @@ export function SettingsForm({ initial }: { initial: Initial }) {
             <p className="text-xs text-fm-muted mt-1">e.g. <code>FM-2026-0001</code></p>
           </div>
           <div className="flex items-end">
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input type="checkbox" name="stripe_enabled" defaultChecked={initial.stripe_enabled} />
-              Show "Pay online" link on invoice emails
+            <label className="inline-flex items-center gap-2 text-sm text-fm-muted cursor-not-allowed">
+              <input type="checkbox" disabled checked={false} />
+              Online payments (Stripe) — disabled
             </label>
           </div>
         </div>

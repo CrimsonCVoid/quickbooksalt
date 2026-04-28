@@ -89,6 +89,9 @@ const s = StyleSheet.create({
     borderColor: C.line,
   },
   checkAmountValue: { flex: 1, fontFamily: "Helvetica-Bold", fontSize: 16 },
+  // Used for individual address lines inside the Mail-to column — no `flex: 1`
+  // so they stack naturally in the column instead of fighting for the same space.
+  checkValueLine: { fontFamily: "Helvetica-Bold", fontSize: 11, lineHeight: 1.3 },
   checkNotes: {
     marginTop: 10,
     paddingTop: 8,
@@ -253,10 +256,10 @@ export function InvoicePDF({ invoice }: { invoice: PdfInvoice }) {
                 {hasAddress && (
                   <View style={s.checkRow}>
                     <Text style={s.checkLabel}>Mail to</Text>
-                    <View style={{ flex: 1 }}>
-                      {c.addressLine1 && <Text style={s.checkValue}>{c.addressLine1}</Text>}
-                      {c.addressLine2 && <Text style={s.checkValue}>{c.addressLine2}</Text>}
-                      {cityStateZip && <Text style={s.checkValue}>{cityStateZip}</Text>}
+                    <View style={{ flex: 1, flexDirection: "column" }}>
+                      {c.addressLine1 && <Text style={s.checkValueLine}>{c.addressLine1}</Text>}
+                      {c.addressLine2 && <Text style={s.checkValueLine}>{c.addressLine2}</Text>}
+                      {cityStateZip && <Text style={s.checkValueLine}>{cityStateZip}</Text>}
                     </View>
                   </View>
                 )}

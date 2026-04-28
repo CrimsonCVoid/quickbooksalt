@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 const SettingsSchema = z.object({
@@ -53,21 +53,32 @@ export async function uploadLogo(formData: FormData) {
   if (!file || file.size === 0) return { error: "No file" };
   if (file.size > 2 * 1024 * 1024) return { error: "Logo must be under 2MB" };
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  // Authenticate via the user-session client …
+  const userSupabase = await createClient();
+  const { data: { user } } = await userSupabase.auth.getUser();
   if (!user) return { error: "Not authenticated" };
 
-  const ext = file.name.split(".").pop() || "png";
+  // … then do the storage write with the service-role client. storage.objects has
+  // its own RLS that we don't bother managing for an internal-only tool —
+  // the path is scoped to the owner's UUID so isolation is preserved.
+  const admin = createServiceClient();
+
+  const ext = (file.name.split(".").pop() || "png").toLowerCase();
   const path = `${user.id}/logo.${ext}`;
   const arrBuf = await file.arrayBuffer();
 
-  const { error: upErr } = await supabase.storage
+  const { error: upErr } = await admin.storage
     .from("logos")
     .upload(path, new Uint8Array(arrBuf), { contentType: file.type, upsert: true });
   if (upErr) return { error: upErr.message };
 
-  const { data: pub } = supabase.storage.from("logos").getPublicUrl(path);
-  await supabase.from("settings").upsert({ owner_id: user.id, logo_url: pub.publicUrl }, { onConflict: "owner_id" });
+  const { data: pub } = admin.storage.from("logos").getPublicUrl(path);
+
+  // The settings upsert still goes through the user client so it respects RLS.
+  const { error: setErr } = await userSupabase
+    .from("settings")
+    .upsert({ owner_id: user.id, logo_url: pub.publicUrl }, { onConflict: "owner_id" });
+  if (setErr) return { error: setErr.message };
 
   revalidatePath("/admin/settings");
   return { ok: true, url: pub.publicUrl };

@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+@theme {
+  --color-fm-yellow: #FFD60A;
+  --color-fm-yellow-dark: #E6BD00;
+  --color-fm-ink: #1E1E1E;
+  --color-fm-paper: #FAFAF7;
+  --color-fm-line: #E8E6DE;
+  --color-fm-muted: #6B6B66;
+  --color-fm-success: #16A34A;
+  --color-fm-warn: #F59E0B;
+  --color-fm-danger: #DC2626;
+
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Archivo Black", "Space Grotesk", sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html, body {
+  background: var(--color-fm-paper);
+  color: var(--color-fm-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- Reusable component classes (Tailwind v4 @layer) --- */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply bg-fm-yellow text-fm-ink hover:bg-fm-yellow-dark;
+    box-shadow: 0 2px 0 0 var(--color-fm-ink);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 0 0 var(--color-fm-ink);
+  }
+  .btn-primary:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 0 var(--color-fm-ink);
+  }
+  .btn-secondary {
+    @apply border border-fm-ink/20 bg-white text-fm-ink hover:bg-fm-paper;
+  }
+  .btn-ghost {
+    @apply text-fm-ink hover:bg-fm-ink/5;
+  }
+  .btn-danger {
+    @apply bg-fm-danger text-white hover:opacity-90;
+  }
+
+  .card {
+    @apply rounded-xl border border-fm-line bg-white p-6;
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-fm-line bg-white px-3 py-2.5 text-sm text-fm-ink placeholder:text-fm-muted focus:border-fm-ink focus:outline-none focus:ring-2 focus:ring-fm-yellow/40;
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-fm-muted;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold;
+  }
+  .badge-draft     { @apply bg-fm-line text-fm-muted; }
+  .badge-pending   { @apply bg-fm-yellow/30 text-fm-ink; }
+  .badge-sent      { @apply bg-blue-100 text-blue-900; }
+  .badge-paid      { @apply bg-green-100 text-green-900; }
+  .badge-overdue   { @apply bg-red-100 text-red-900; }
+  .badge-void      { @apply bg-fm-line text-fm-muted line-through; }
+
+  .display {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}

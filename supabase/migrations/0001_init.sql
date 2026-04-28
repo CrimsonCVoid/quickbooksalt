@@ -238,7 +238,7 @@ create table settings (
   email_signature text,
   pdf_accent_color text,                     -- hex e.g. "#FFD60A"
   default_terms_days integer not null default 15,
-  invoice_number_prefix text not null default 'FM',
+  invoice_number_prefix text not null default 'CCH',
   invoice_number_seq    integer not null default 0,
   check_instructions text,
   stripe_enabled  boolean not null default false,

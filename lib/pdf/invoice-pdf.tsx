@@ -44,8 +44,60 @@ const s = StyleSheet.create({
   totalsRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 3 },
   grandTotalRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 8, marginTop: 4, backgroundColor: C.yellow, paddingHorizontal: 8 },
   grandTotalText: { fontFamily: "Helvetica-Bold", fontSize: 14 },
-  payBlock: { marginTop: 32, padding: 12, backgroundColor: C.paper, borderRadius: 4 },
+  payBlock: { marginTop: 16, padding: 12, backgroundColor: C.paper, borderRadius: 4 },
   payTitle: { fontFamily: "Helvetica-Bold", marginBottom: 4 },
+
+  // "Pay by Check" structured block — sits right under Balance Due so the
+  // customer has every field they need without flipping pages.
+  checkBlock: {
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: C.ink,
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  checkHeader: {
+    backgroundColor: C.yellow,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: C.ink,
+  },
+  checkHeaderText: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 1.5,
+  },
+  checkBody: { padding: 12 },
+  checkRow: { flexDirection: "row", alignItems: "flex-start", paddingVertical: 3 },
+  checkLabel: {
+    width: 95,
+    fontSize: 9,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    color: C.muted,
+    paddingTop: 2,
+  },
+  checkValue: { flex: 1, fontFamily: "Helvetica-Bold", fontSize: 11 },
+  checkAmountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 6,
+    marginTop: 4,
+    borderTopWidth: 0.5,
+    borderColor: C.line,
+  },
+  checkAmountValue: { flex: 1, fontFamily: "Helvetica-Bold", fontSize: 16 },
+  checkNotes: {
+    marginTop: 10,
+    paddingTop: 8,
+    borderTopWidth: 0.5,
+    borderColor: C.line,
+    fontSize: 9,
+    color: C.muted,
+    fontStyle: "italic",
+  },
   signatureBlock: { marginTop: 32, paddingTop: 12, borderTop: 0.5, borderColor: C.line, flexDirection: "row", justifyContent: "space-between" },
   signatureBox: { width: 220, paddingTop: 6, borderTop: 0.5, borderColor: C.ink },
   footer: { position: "absolute", bottom: 30, left: 40, right: 40, textAlign: "center", color: C.muted, fontSize: 8 },
@@ -82,6 +134,17 @@ export type PdfInvoice = {
     phone: string | null;
     email: string | null;
     logoUrl: string | null;
+  };
+  /** Structured pay-by-check details rendered right under Balance Due. */
+  check?: {
+    payTo: string;
+    addressLine1: string | null;
+    addressLine2: string | null;
+    city: string | null;
+    state: string | null;
+    postal: string | null;
+    memo: string;             // already substituted with invoice number
+    notes: string | null;     // free-form additional instructions
   };
   payUrl?: string | null;
 };
@@ -157,6 +220,48 @@ export function InvoicePDF({ invoice }: { invoice: PdfInvoice }) {
           </View>
         </View>
 
+        {/* Pay-by-check details — right under Balance Due, every field a customer needs */}
+        {invoice.check && balance > 0 && (() => {
+          const c = invoice.check;
+          const cityStateZip = [
+            c.city,
+            [c.state, c.postal].filter(Boolean).join(" "),
+          ].filter(Boolean).join(", ");
+          const hasAddress = !!(c.addressLine1 || cityStateZip);
+          return (
+            <View style={s.checkBlock} wrap={false}>
+              <View style={s.checkHeader}>
+                <Text style={s.checkHeaderText}>Pay by Check</Text>
+              </View>
+              <View style={s.checkBody}>
+                <View style={s.checkRow}>
+                  <Text style={s.checkLabel}>Pay to</Text>
+                  <Text style={s.checkValue}>{c.payTo}</Text>
+                </View>
+                {hasAddress && (
+                  <View style={s.checkRow}>
+                    <Text style={s.checkLabel}>Mail to</Text>
+                    <View style={{ flex: 1 }}>
+                      {c.addressLine1 && <Text style={s.checkValue}>{c.addressLine1}</Text>}
+                      {c.addressLine2 && <Text style={s.checkValue}>{c.addressLine2}</Text>}
+                      {cityStateZip && <Text style={s.checkValue}>{cityStateZip}</Text>}
+                    </View>
+                  </View>
+                )}
+                <View style={s.checkRow}>
+                  <Text style={s.checkLabel}>Memo line</Text>
+                  <Text style={s.checkValue}>{c.memo}</Text>
+                </View>
+                <View style={s.checkAmountRow}>
+                  <Text style={s.checkLabel}>Amount</Text>
+                  <Text style={s.checkAmountValue}>{fmt(balance)}</Text>
+                </View>
+                {c.notes && <Text style={s.checkNotes}>{c.notes}</Text>}
+              </View>
+            </View>
+          );
+        })()}
+
         {invoice.notes && (
           <View style={{ marginTop: 16 }}>
             <Text style={s.label}>Notes</Text>
@@ -164,17 +269,14 @@ export function InvoicePDF({ invoice }: { invoice: PdfInvoice }) {
           </View>
         )}
 
-        <View style={s.payBlock}>
-          <Text style={s.payTitle}>How to pay</Text>
-          {invoice.check_instructions ? (
-            <Text>{invoice.check_instructions}</Text>
-          ) : (
-            <Text style={{ color: C.muted }}>Mail check or pay online via the link in the email.</Text>
-          )}
-          {invoice.payUrl && (
-            <Text style={{ marginTop: 6 }}>Pay online: <Text style={{ color: C.ink, textDecoration: "underline" }}>{invoice.payUrl}</Text></Text>
-          )}
-        </View>
+        {invoice.payUrl && (
+          <View style={s.payBlock}>
+            <Text style={s.payTitle}>Pay online</Text>
+            <Text>
+              Or pay online: <Text style={{ textDecoration: "underline" }}>{invoice.payUrl}</Text>
+            </Text>
+          </View>
+        )}
 
         <View style={s.signatureBlock}>
           <View style={s.signatureBox}>

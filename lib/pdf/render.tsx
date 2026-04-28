@@ -69,6 +69,19 @@ export async function loadInvoiceForPdf(invoiceId: string, ownerId?: string): Pr
       email: settings?.business_email || null,
       logoUrl: settings?.logo_url || null,
     },
+    check: {
+      payTo: settings?.check_pay_to || settings?.business_name || brand.name,
+      addressLine1: settings?.check_address_line1 || null,
+      addressLine2: settings?.check_address_line2 || null,
+      city: settings?.check_city || null,
+      state: settings?.check_state || null,
+      postal: settings?.check_postal || null,
+      memo: (settings?.check_memo_template || "Invoice {invoice_number}").replace(
+        "{invoice_number}",
+        inv.invoice_number
+      ),
+      notes: inv.check_instructions || settings?.check_instructions || null,
+    },
     payUrl: settings?.stripe_enabled ? payUrl : null,
   };
 }

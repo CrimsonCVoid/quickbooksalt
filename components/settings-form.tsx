@@ -13,6 +13,13 @@ type Initial = {
   pdf_accent_color: string;
   default_terms_days: number;
   invoice_number_prefix: string;
+  check_pay_to: string;
+  check_address_line1: string;
+  check_address_line2: string;
+  check_city: string;
+  check_state: string;
+  check_postal: string;
+  check_memo_template: string;
   check_instructions: string;
   stripe_enabled: boolean;
   resend_from_email: string;
@@ -39,7 +46,14 @@ export function SettingsForm({ initial }: { initial: Initial }) {
             email_signature: String(fd.get("email_signature") || ""),
             pdf_accent_color: String(fd.get("pdf_accent_color") || ""),
             default_terms_days: Number(fd.get("default_terms_days") || 15),
-            invoice_number_prefix: String(fd.get("invoice_number_prefix") || "FM"),
+            invoice_number_prefix: String(fd.get("invoice_number_prefix") || "CCH"),
+            check_pay_to: String(fd.get("check_pay_to") || ""),
+            check_address_line1: String(fd.get("check_address_line1") || ""),
+            check_address_line2: String(fd.get("check_address_line2") || ""),
+            check_city: String(fd.get("check_city") || ""),
+            check_state: String(fd.get("check_state") || ""),
+            check_postal: String(fd.get("check_postal") || ""),
+            check_memo_template: String(fd.get("check_memo_template") || ""),
             check_instructions: String(fd.get("check_instructions") || ""),
             stripe_enabled: fd.get("stripe_enabled") === "on",
             resend_from_email: String(fd.get("resend_from_email") || ""),
@@ -104,10 +118,45 @@ export function SettingsForm({ initial }: { initial: Initial }) {
           </div>
         </div>
 
-        <div>
-          <label className="label">Check payment instructions</label>
-          <textarea name="check_instructions" defaultValue={initial.check_instructions} rows={4} className="input font-mono text-xs" />
-          <p className="text-xs text-fm-muted mt-1">Shown on every invoice PDF + email. This is the primary payment path.</p>
+        <h2 className="display text-2xl mt-2">Check payment details</h2>
+        <p className="text-xs text-fm-muted -mt-3">Shown prominently on the invoice PDF (right under the balance due) so the customer can write the check without hunting for the info.</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <label className="label">Make checks payable to</label>
+            <input name="check_pay_to" defaultValue={initial.check_pay_to} placeholder="Carolina Comfort HVAC" className="input" />
+          </div>
+          <div className="md:col-span-2">
+            <label className="label">Mail to — street address</label>
+            <input name="check_address_line1" defaultValue={initial.check_address_line1} placeholder="123 Main Street" className="input" />
+          </div>
+          <div className="md:col-span-2">
+            <label className="label">Mail to — apt / suite (optional)</label>
+            <input name="check_address_line2" defaultValue={initial.check_address_line2} placeholder="Suite 4B" className="input" />
+          </div>
+          <div>
+            <label className="label">City</label>
+            <input name="check_city" defaultValue={initial.check_city} className="input" />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="label">State</label>
+              <input name="check_state" defaultValue={initial.check_state} maxLength={2} className="input uppercase" />
+            </div>
+            <div>
+              <label className="label">ZIP</label>
+              <input name="check_postal" defaultValue={initial.check_postal} className="input" />
+            </div>
+          </div>
+          <div className="md:col-span-2">
+            <label className="label">Memo line on the check</label>
+            <input name="check_memo_template" defaultValue={initial.check_memo_template} placeholder="Invoice {invoice_number}" className="input" />
+            <p className="text-xs text-fm-muted mt-1">Use <code>{`{invoice_number}`}</code> as a placeholder — it'll be filled in per invoice.</p>
+          </div>
+          <div className="md:col-span-2">
+            <label className="label">Additional instructions (optional)</label>
+            <textarea name="check_instructions" defaultValue={initial.check_instructions} rows={2} className="input" placeholder="e.g. After-hours drop box at side door" />
+          </div>
         </div>
 
         {error && <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-900">{error}</div>}

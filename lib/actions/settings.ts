@@ -12,7 +12,16 @@ const SettingsSchema = z.object({
   email_signature: z.string().optional().nullable(),
   pdf_accent_color: z.string().optional().nullable(),
   default_terms_days: z.coerce.number().int().min(0).max(365).default(15),
-  invoice_number_prefix: z.string().min(1).max(10).default("FM"),
+  invoice_number_prefix: z.string().min(1).max(10).default("CCH"),
+  // Structured check-payment fields shown prominently on the invoice PDF.
+  check_pay_to: z.string().optional().nullable(),
+  check_address_line1: z.string().optional().nullable(),
+  check_address_line2: z.string().optional().nullable(),
+  check_city: z.string().optional().nullable(),
+  check_state: z.string().optional().nullable(),
+  check_postal: z.string().optional().nullable(),
+  check_memo_template: z.string().optional().nullable(),
+  // Free-form extra notes (e.g. "After-hours drop box at side door")
   check_instructions: z.string().optional().nullable(),
   stripe_enabled: z.coerce.boolean().default(false),
   resend_from_email: z.string().optional().nullable(),

@@ -22,12 +22,19 @@ export const brand = {
     display: "Archivo Black",
   },
 
-  /** Default check-payment instructions — overridable in /admin/settings */
-  defaultCheckInstructions: [
-    "Make checks payable to: Carolina Comfort HVAC",
-    "Mail to: __ Street, ____, NC ____",
-    "Reference invoice number on memo line.",
-  ].join("\n"),
+  /** Default structured check-payment details — overridable in /admin/settings */
+  defaultCheck: {
+    payTo: "Carolina Comfort HVAC",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    state: "NC",
+    postal: "",
+    memoTemplate: "Invoice {invoice_number}",
+  },
+
+  /** Default free-form additional instructions (extra notes under structured fields) */
+  defaultCheckInstructions: "",
 
   /** Default payment terms (Net N) */
   defaultPaymentTermsDays: 15,

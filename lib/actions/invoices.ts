@@ -189,6 +189,27 @@ export async function voidInvoice(id: string) {
   return { ok: true };
 }
 
+/** Hard delete a voided invoice. Lines/payments/signatures cascade away via FK.
+ *  Strict guard: only invoices with status='void' can be deleted, so
+ *  draft/sent/paid invoices can't be wiped accidentally. To delete a non-void
+ *  invoice, void it first. */
+export async function deleteInvoice(id: string) {
+  const supabase = await createClient();
+  const { data: inv, error: getErr } = await supabase
+    .from("invoices")
+    .select("status, invoice_number")
+    .eq("id", id)
+    .single();
+  if (getErr || !inv) return { error: "Invoice not found" };
+  if (inv.status !== "void") {
+    return { error: "Only voided invoices can be deleted. Void it first." };
+  }
+  const { error } = await supabase.from("invoices").delete().eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/invoices");
+  redirect("/admin/invoices");
+}
+
 /** Approve a pending_approval invoice & send (approve + email). */
 export async function approveAndSendInvoice(id: string) {
   const supabase = await createClient();

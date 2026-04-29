@@ -42,6 +42,16 @@ export default async function InvoiceDetail({ params }: { params: Promise<{ id: 
         </div>
       </div>
 
+      {invoice.status === "void" && (
+        <div className="mb-4 rounded-lg border-2 border-red-300 bg-red-50 p-4 flex items-center gap-3">
+          <span className="display text-2xl text-red-700">⊘</span>
+          <div className="flex-1">
+            <p className="font-bold text-red-900">This invoice has been voided</p>
+            <p className="text-sm text-red-800">It's preserved here for records. Use "Delete permanently" below to remove it from the database — line items, payments, and signatures attached to it will cascade away.</p>
+          </div>
+        </div>
+      )}
+
       <InvoiceActions invoice={invoice as any} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">

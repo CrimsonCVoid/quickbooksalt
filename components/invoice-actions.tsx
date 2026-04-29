@@ -2,7 +2,7 @@
 
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
-import { sendInvoice, voidInvoice, approveAndSendInvoice } from "@/lib/actions/invoices";
+import { sendInvoice, voidInvoice, approveAndSendInvoice, deleteInvoice } from "@/lib/actions/invoices";
 
 export function InvoiceActions({ invoice }: { invoice: any }) {
   const router = useRouter();
@@ -12,6 +12,7 @@ export function InvoiceActions({ invoice }: { invoice: any }) {
   const isPending = invoice.status === "pending_approval";
   const canSend = invoice.status === "draft" || invoice.status === "sent";
   const canVoid = invoice.status !== "void" && invoice.status !== "paid";
+  const isVoid = invoice.status === "void";
 
   return (
     <div className="card flex flex-wrap items-center gap-3">
@@ -42,16 +43,34 @@ export function InvoiceActions({ invoice }: { invoice: any }) {
       <a href={`/api/invoices/${invoice.id}/pdf`} target="_blank" rel="noopener" className="btn btn-secondary">
         View PDF
       </a>
-      <a href={`/sign/${invoice.public_token}`} target="_blank" rel="noopener" className="btn btn-ghost">
-        Open public sign link →
-      </a>
+      {!isVoid && (
+        <a href={`/sign/${invoice.public_token}`} target="_blank" rel="noopener" className="btn btn-ghost">
+          Open public sign link →
+        </a>
+      )}
       {canVoid && (
         <button
           disabled={pending}
-          onClick={() => { if (!confirm("Void this invoice?")) return; start(async () => { await voidInvoice(invoice.id); router.refresh(); }); }}
+          onClick={() => { if (!confirm("Void this invoice? It will be marked as void but preserved for records (you can hard-delete after).")) return; start(async () => { await voidInvoice(invoice.id); router.refresh(); }); }}
           className="btn btn-ghost text-red-700 ml-auto"
         >
           Void
+        </button>
+      )}
+      {isVoid && (
+        <button
+          disabled={pending}
+          onClick={() => {
+            if (!confirm(`Permanently delete invoice ${invoice.invoice_number}?\n\nThis cannot be undone. Line items, payments, and signatures attached to this invoice will be removed.`)) return;
+            start(async () => {
+              const r = await deleteInvoice(invoice.id);
+              if (r?.error) setMsg(r.error);
+              // success path redirects server-side to /admin/invoices
+            });
+          }}
+          className="btn btn-danger ml-auto"
+        >
+          {pending ? "Deleting…" : "Delete permanently"}
         </button>
       )}
       {msg && <p className="text-sm text-fm-muted">{msg}</p>}

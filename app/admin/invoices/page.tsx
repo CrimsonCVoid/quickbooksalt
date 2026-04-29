@@ -69,7 +69,7 @@ export default async function InvoicesPage({
             {!invoices || invoices.length === 0 ? (
               <tr><td colSpan={7} className="text-center py-12 text-fm-muted">No invoices match.</td></tr>
             ) : invoices.map((inv) => (
-              <tr key={inv.id} className="hover:bg-fm-paper/50">
+              <tr key={inv.id} className={inv.status === "void" ? "row-void" : "hover:bg-fm-paper/50"}>
                 <td className="px-6 py-3 font-mono text-xs"><Link href={`/admin/invoices/${inv.id}`} className="hover:underline">{inv.invoice_number}</Link></td>
                 <td className="px-6 py-3 font-medium">{inv.bill_to_company}</td>
                 <td className="px-6 py-3 text-fm-muted">{formatDate(inv.issue_date)}</td>

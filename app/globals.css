@@ -30,6 +30,7 @@ html, body {
 @layer components {
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed;
+    min-height: 44px; /* iOS tap target */
   }
   .btn-primary {
     @apply bg-fm-yellow text-fm-ink hover:bg-fm-yellow-dark;
@@ -58,7 +59,8 @@ html, body {
   }
 
   .input {
-    @apply w-full rounded-lg border border-fm-line bg-white px-3 py-2.5 text-sm text-fm-ink placeholder:text-fm-muted focus:border-fm-ink focus:outline-none focus:ring-2 focus:ring-fm-yellow/40;
+    @apply w-full rounded-lg border border-fm-line bg-white px-3 py-2.5 text-base md:text-sm text-fm-ink placeholder:text-fm-muted focus:border-fm-ink focus:outline-none focus:ring-2 focus:ring-fm-yellow/40;
+    min-height: 44px; /* iOS tap target; 16px+ font on mobile prevents auto-zoom */
   }
   .label {
     @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-fm-muted;

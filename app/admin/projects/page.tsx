@@ -97,26 +97,25 @@ export default async function ProjectsPage({
 
   return (
     <div>
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
         <div>
-          <h1 className="display text-4xl">Projects</h1>
-          <p className="text-fm-muted">
-            One row per customer with their preloaded cycle price + filter mix.
-            Click "+ Invoice" to generate one in a single click.
+          <h1 className="display text-3xl md:text-4xl">Projects</h1>
+          <p className="text-fm-muted text-sm">
+            One row per customer with their cycle price + filter mix preloaded.
           </p>
         </div>
-        <Link href="/admin/skus" className="btn btn-secondary text-sm">
+        <Link href="/admin/skus" className="btn btn-secondary text-sm self-start whitespace-nowrap">
           Filter catalog →
         </Link>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div className="flex gap-2 flex-wrap">
+      <div className="flex flex-col gap-3 mb-4">
+        <div className="flex gap-1.5 flex-wrap -mx-1 px-1 overflow-x-auto">
           {tabs.map((t) => (
             <Link
               key={t.key}
               href={`/admin/projects?filter=${t.key}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
-              className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${
                 filter === t.key ? "bg-fm-ink text-white" : "bg-white border border-fm-line text-fm-ink"
               }`}
             >
@@ -130,8 +129,7 @@ export default async function ProjectsPage({
             name="q"
             defaultValue={q}
             placeholder="Search…"
-            className="input text-sm"
-            style={{ maxWidth: 240 }}
+            className="input text-sm w-full sm:max-w-xs"
           />
         </form>
       </div>
@@ -141,7 +139,55 @@ export default async function ProjectsPage({
           <p className="text-fm-muted">No projects match.</p>
         </div>
       ) : (
-        <div className="card p-0 overflow-hidden">
+        <>
+        {/* Mobile: cards */}
+        <ul className="md:hidden space-y-2">
+          {visible.map((r) => (
+            <li key={r.customerId} className="rounded-xl border border-fm-line bg-white p-3">
+              <div className="flex items-start justify-between gap-3">
+                <Link href={`/admin/customers/${r.customerId}`} className="min-w-0 flex-1">
+                  <p className="font-semibold truncate">{r.customer}</p>
+                  <p className="text-xs text-fm-muted truncate">
+                    {[r.city, r.state].filter(Boolean).join(", ") || "—"}
+                  </p>
+                </Link>
+                <div className="text-right shrink-0">
+                  {r.cyclePrice !== null
+                    ? <p className="font-bold text-base">{formatMoney(r.cyclePrice)}</p>
+                    : <p className="text-xs text-fm-muted">Per invoice</p>}
+                  {r.intervalDays && (
+                    <p className="text-xs text-fm-muted">{r.intervalDays}d cycle</p>
+                  )}
+                </div>
+              </div>
+              {r.filters.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {r.filters.map((f) => (
+                    <span key={f.name} className="inline-flex items-baseline gap-1 rounded bg-fm-yellow/30 px-1.5 py-0.5 text-xs">
+                      <span className="font-mono uppercase">{f.name}</span>
+                      <span className="font-bold">×{f.qty}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="mt-3 flex items-center justify-between gap-2 text-xs">
+                <span className="text-fm-muted">
+                  {r.taxRate > 0 ? `${(r.taxRate * 100).toFixed(2).replace(/\.?0+$/, "")}% tax` : "Tax —"}
+                  {r.nextDue && ` · Next ${formatDate(r.nextDue)}`}
+                </span>
+                <Link
+                  href={`/admin/invoices/new?customer=${r.customerId}&autofill=1`}
+                  className="btn btn-primary text-xs"
+                >
+                  + Invoice
+                </Link>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        {/* Desktop: table */}
+        <div className="hidden md:block card p-0 overflow-hidden">
           <table className="w-full text-sm">
             <thead className="text-left text-xs uppercase tracking-wider text-fm-muted bg-fm-paper">
               <tr>
@@ -207,6 +253,7 @@ export default async function ProjectsPage({
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       <p className="text-xs text-fm-muted mt-4 max-w-2xl">

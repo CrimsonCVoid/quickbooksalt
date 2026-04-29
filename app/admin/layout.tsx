@@ -9,7 +9,7 @@ const NAV = [
   { href: "/admin/invoices", label: "Invoices" },
   { href: "/admin/approvals", label: "Approvals" },
   { href: "/admin/customers", label: "Customers" },
-  { href: "/admin/skus", label: "Filter SKUs" },
+  { href: "/admin/projects", label: "Projects" },
   { href: "/admin/plans", label: "Service Plans" },
   { href: "/admin/tax-projection", label: "Tax projection" },
   { href: "/admin/settings", label: "Settings" },

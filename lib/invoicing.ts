@@ -46,16 +46,27 @@ export type LineDraft = {
 };
 
 /**
- * Build line item drafts for a customer from their location_filters,
- * scoped to a list of location ids (empty array = ALL non-archived locations).
- * Adds an optional labor fee line if `laborFee > 0`.
+ * Build line item drafts for a customer from their location_filters.
+ *
+ * Two modes — chosen automatically based on `laborFee`:
+ *
+ *   PROJECT MODE (laborFee > 0):
+ *     One bundled line per location: "Filter service · 1× 16x20, 3× 20x20"
+ *     priced at the cycle price. The customer sees one clean number,
+ *     never a wall of $0 filter rows. This is the right model when the
+ *     project price covers everything (filters + labor + margin).
+ *
+ *   ITEMIZED MODE (laborFee == 0):
+ *     One line per filter at its SKU unit_price. Used when each SKU has
+ *     real per-unit pricing (e.g. residential subscription where every
+ *     filter has a list price).
  */
 export async function buildLineItemsFromLocations(
   supabase: SupabaseClient,
   customerId: string,
   locationIds: string[],
   laborFee = 0,
-  laborLabel = "Service visit"
+  laborLabel = "Filter service"
 ): Promise<LineDraft[]> {
   let q = supabase
     .from("locations")
@@ -72,6 +83,31 @@ export async function buildLineItemsFromLocations(
 
   const lines: LineDraft[] = [];
   let order = 0;
+
+  if (laborFee > 0) {
+    // Project mode: one bundled line per location with the filter mix in the description.
+    const allMixParts: string[] = [];
+    for (const loc of locations ?? []) {
+      const filters = (loc.location_filters as any[]) ?? [];
+      const mix = filters
+        .filter((lf) => lf.sku)
+        .map((lf) => `${lf.quantity}× ${lf.sku.name}`)
+        .join(", ");
+      if (mix) allMixParts.push(mix);
+    }
+    const mixSummary = allMixParts.join(" · ");
+    const description = mixSummary ? `${laborLabel} — ${mixSummary}` : laborLabel;
+    lines.push({
+      location_id: locations?.[0]?.id ?? null,
+      description,
+      quantity: 1,
+      unit_price: laborFee,
+      sort_order: 0,
+    });
+    return lines;
+  }
+
+  // Itemized mode
   for (const loc of locations ?? []) {
     for (const lf of (loc.location_filters as any[]) ?? []) {
       const sku = lf.sku;
@@ -86,15 +122,6 @@ export async function buildLineItemsFromLocations(
         sort_order: order++,
       });
     }
-  }
-
-  if (laborFee > 0) {
-    lines.push({
-      description: laborLabel || "Service visit",
-      quantity: 1,
-      unit_price: laborFee,
-      sort_order: order++,
-    });
   }
 
   return lines;

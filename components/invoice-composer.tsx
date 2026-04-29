@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useMemo } from "react";
+import { useState, useTransition, useMemo, useEffect } from "react";
 import { createInvoice } from "@/lib/actions/invoices";
 import { formatMoney } from "@/lib/utils";
 import { addDays, format } from "date-fns";
@@ -8,7 +8,14 @@ import { addDays, format } from "date-fns";
 type Sku = { id: string; name: string; size: string | null; merv: number | null; unit_price: number };
 type LocFilter = { quantity: number; unit_price_override: number | null; sku: Sku };
 type Location = { id: string; label: string; archived: boolean; location_filters: LocFilter[] };
-type Customer = { id: string; company_name: string; payment_terms_days: number; locations: Location[] };
+type ServicePlan = { id: string; labor_fee: number; labor_fee_label: string | null; active: boolean };
+type Customer = {
+  id: string;
+  company_name: string;
+  payment_terms_days: number;
+  locations: Location[];
+  service_plans?: ServicePlan[];
+};
 
 type Line = {
   description: string;
@@ -21,9 +28,11 @@ type Line = {
 export function InvoiceComposer({
   customers,
   initialCustomerId,
+  autofill = false,
 }: {
   customers: Customer[];
   initialCustomerId?: string;
+  autofill?: boolean;
 }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -31,15 +40,43 @@ export function InvoiceComposer({
   const [customerId, setCustomerId] = useState(initialCustomerId || customers[0]?.id || "");
   const customer = customers.find((c) => c.id === customerId);
   const locs = useMemo(() => (customer?.locations || []).filter((l) => !l.archived), [customer]);
+  const activePlan = customer?.service_plans?.find((p) => p.active);
+  const cyclePrice = Number(activePlan?.labor_fee ?? 0);
+
   const [selectedLocs, setSelectedLocs] = useState<string[]>([]);
   const [lines, setLines] = useState<Line[]>([{ description: "", quantity: 1, unit_price: 0 }]);
 
   const [dueDate, setDueDate] = useState(() => format(addDays(new Date(), customer?.payment_terms_days ?? 15), "yyyy-MM-dd"));
   const [notes, setNotes] = useState("");
 
+  // Project mode (cycle price > 0): bundle filter mix into one line at the cycle price.
+  // Itemized mode (cycle price == 0): one line per filter at SKU price.
   function prefillFromLocations() {
-    const newLines: Line[] = [];
     const targetLocs = selectedLocs.length ? locs.filter((l) => selectedLocs.includes(l.id)) : locs;
+
+    if (cyclePrice > 0) {
+      // Project mode
+      const mix = targetLocs.flatMap((loc) =>
+        (loc.location_filters || []).filter((lf) => lf.sku).map((lf) => `${lf.quantity}× ${lf.sku.name}`)
+      );
+      if (mix.length === 0 && targetLocs.length === 0) {
+        setError("Pick a location first.");
+        return;
+      }
+      const label = activePlan?.labor_fee_label || "Filter service";
+      const description = mix.length ? `${label} — ${mix.join(", ")}` : label;
+      setLines([{
+        description,
+        quantity: 1,
+        unit_price: cyclePrice,
+        location_id: targetLocs[0]?.id ?? null,
+      }]);
+      setError(null);
+      return;
+    }
+
+    // Itemized mode
+    const newLines: Line[] = [];
     for (const loc of targetLocs) {
       for (const lf of loc.location_filters || []) {
         const price = Number(lf.unit_price_override ?? lf.sku.unit_price ?? 0);
@@ -53,12 +90,18 @@ export function InvoiceComposer({
       }
     }
     if (newLines.length === 0) {
-      setError("Selected locations have no filters configured. Add filters under each location first.");
+      setError("This customer has no filters or cycle price configured. Add filters under their location first.");
       return;
     }
     setLines(newLines);
     setError(null);
   }
+
+  // Auto-prefill on mount when arriving from /admin/projects
+  useEffect(() => {
+    if (autofill && customer) prefillFromLocations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autofill, customerId]);
 
   function updateLine(idx: number, patch: Partial<Line>) {
     setLines((prev) => prev.map((l, i) => (i === idx ? { ...l, ...patch } : l)));

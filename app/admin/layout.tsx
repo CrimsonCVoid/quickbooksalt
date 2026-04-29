@@ -11,6 +11,7 @@ const NAV = [
   { href: "/admin/customers", label: "Customers" },
   { href: "/admin/skus", label: "Filter SKUs" },
   { href: "/admin/plans", label: "Service Plans" },
+  { href: "/admin/tax-projection", label: "Tax projection" },
   { href: "/admin/settings", label: "Settings" },
 ];
 

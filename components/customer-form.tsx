@@ -27,6 +27,8 @@ export function CustomerForm({ customer }: { customer?: Customer }) {
             billing_postal: String(fd.get("billing_postal") || ""),
             payment_terms_days: Number(fd.get("payment_terms_days") || 15),
             default_payment_method: String(fd.get("default_payment_method") || "check") as "check" | "stripe" | "cash" | "ach" | "other",
+            // Tax rate is entered as a percent (e.g. 7) and stored as a fraction (0.07).
+            tax_rate: Number(fd.get("tax_rate_pct") || 0) / 100,
             notes: String(fd.get("notes") || ""),
           };
           const res = await saveCustomer(input);
@@ -67,7 +69,7 @@ export function CustomerForm({ customer }: { customer?: Customer }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="label">Payment terms (Net days)</label>
           <input name="payment_terms_days" type="number" min={0} max={365} defaultValue={customer?.payment_terms_days ?? 15} className="input" />
@@ -81,6 +83,19 @@ export function CustomerForm({ customer }: { customer?: Customer }) {
             <option value="ach">ACH</option>
             <option value="other">Other</option>
           </select>
+        </div>
+        <div>
+          <label className="label">Sales tax rate (%)</label>
+          <input
+            name="tax_rate_pct"
+            type="number"
+            step="0.01"
+            min={0}
+            max={20}
+            defaultValue={customer?.tax_rate != null ? Number((customer.tax_rate * 100).toFixed(4)) : 0}
+            className="input"
+          />
+          <p className="text-xs text-fm-muted mt-1">Combined state + county. 0 = exempt.</p>
         </div>
       </div>
 

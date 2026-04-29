@@ -167,7 +167,11 @@ export async function generateInvoiceFromPlan(
   const issueDate = new Date();
   const dueDate = new Date(plan.next_due_date);
   const subtotal = lineItemsTotal(lines);
-  const total = subtotal; // tax handling can be added later
+  // Tax applied to full invoice (NC sources to destination; HVAC repair/maintenance
+  // is taxable on filters + labor combined).
+  const taxRate = Number(customer.tax_rate || 0);
+  const tax = Math.round(subtotal * taxRate * 100) / 100;
+  const total = subtotal + tax;
 
   const billToAddress = [
     customer.billing_line1,
@@ -192,7 +196,7 @@ export async function generateInvoiceFromPlan(
       bill_to_email: customer.email,
       bill_to_address: billToAddress,
       subtotal,
-      tax: 0,
+      tax,
       total,
       payment_terms: `Net ${termsDays}`,
       check_instructions: settings?.check_instructions ?? null,

@@ -46,6 +46,12 @@ export async function createInvoice(input: z.infer<typeof CreateSchema>) {
     .maybeSingle();
 
   const subtotal = lineItemsTotal(parsed.data.lines);
+  // NC sources HVAC repair/maintenance to the destination — full invoice (filters + labor)
+  // is the tax base. customer.tax_rate is stored as a fraction (0.07 = 7%).
+  const taxRate = Number(customer.tax_rate || 0);
+  const tax = Math.round(subtotal * taxRate * 100) / 100;
+  const total = subtotal + tax;
+
   const billToAddress = [
     customer.billing_line1,
     customer.billing_line2,
@@ -68,8 +74,8 @@ export async function createInvoice(input: z.infer<typeof CreateSchema>) {
       bill_to_email: customer.email,
       bill_to_address: billToAddress,
       subtotal,
-      tax: 0,
-      total: subtotal,
+      tax,
+      total,
       payment_terms: `Net ${termsDays}`,
       check_instructions: settings?.check_instructions ?? null,
       notes: parsed.data.notes,

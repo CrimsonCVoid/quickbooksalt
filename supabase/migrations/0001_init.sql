@@ -38,6 +38,7 @@ create table customers (
   billing_postal  text,
   payment_terms_days  integer not null default 15,
   default_payment_method payment_method not null default 'check',
+  tax_rate        numeric(6,4) not null default 0,
   notes           text,
   archived        boolean not null default false,
   created_at      timestamptz not null default now(),

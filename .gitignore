@@ -7,3 +7,8 @@ node_modules
 .vercel
 dist
 build
+
+# Local imports — contain client data, never commit
+*.csv
+import.csv
+carolina_comfort_clients.csv

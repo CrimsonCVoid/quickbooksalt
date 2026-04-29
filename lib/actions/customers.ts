@@ -16,7 +16,7 @@ const CustomerSchema = z.object({
   billing_city: z.string().optional().nullable(),
   billing_state: z.string().optional().nullable(),
   billing_postal: z.string().optional().nullable(),
-  payment_terms_days: z.coerce.number().int().min(0).max(365).default(15),
+  payment_terms_days: z.coerce.number().int().min(0).max(365).default(30),
   default_payment_method: z.enum(["check", "stripe", "cash", "ach", "other"]).default("check"),
   // Combined state + county sales tax rate as a fraction (e.g. 0.0700 = 7%).
   // 0 = exempt or out-of-jurisdiction.

@@ -46,7 +46,10 @@ export function InvoiceComposer({
   const [selectedLocs, setSelectedLocs] = useState<string[]>([]);
   const [lines, setLines] = useState<Line[]>([{ description: "", quantity: 1, unit_price: 0 }]);
 
-  const [dueDate, setDueDate] = useState(() => format(addDays(new Date(), customer?.payment_terms_days ?? 15), "yyyy-MM-dd"));
+  // User picks invoice date; due date is auto-computed = invoice + customer's terms.
+  const [invoiceDate, setInvoiceDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const termsDays = customer?.payment_terms_days ?? 30;
+  const dueDate = format(addDays(new Date(`${invoiceDate}T00:00:00`), termsDays), "yyyy-MM-dd");
   const [notes, setNotes] = useState("");
 
   // Project mode (cycle price > 0): bundle filter mix into one line at the cycle price.
@@ -127,8 +130,11 @@ export function InvoiceComposer({
             </select>
           </div>
           <div>
-            <label className="label">Due date *</label>
-            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} required className="input" />
+            <label className="label">Invoice date *</label>
+            <input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} required className="input" />
+            <p className="text-xs text-fm-muted mt-1">
+              Due {format(new Date(`${dueDate}T00:00:00`), "MMM d, yyyy")} (Net {termsDays})
+            </p>
           </div>
         </div>
 
@@ -220,7 +226,7 @@ export function InvoiceComposer({
             const res = await createInvoice({
               customer_id: customerId,
               location_ids: selectedLocs,
-              due_date: dueDate,
+              invoice_date: invoiceDate,
               notes,
               lines: cleanLines,
             });

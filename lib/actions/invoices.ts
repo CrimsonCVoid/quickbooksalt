@@ -18,7 +18,8 @@ const LineSchema = z.object({
 const CreateSchema = z.object({
   customer_id: z.string().uuid(),
   location_ids: z.array(z.string().uuid()).default([]),
-  due_date: z.string().min(1),
+  // Caller picks the invoice date; due is computed = invoice_date + payment_terms_days.
+  invoice_date: z.string().min(1),
   payment_terms_days: z.coerce.number().int().min(0).max(365).optional().nullable(),
   notes: z.string().optional().nullable(),
   lines: z.array(LineSchema).min(1, "At least one line item required"),
@@ -57,7 +58,9 @@ export async function createInvoice(input: z.infer<typeof CreateSchema>) {
     customer.billing_line2,
     [customer.billing_city, [customer.billing_state, customer.billing_postal].filter(Boolean).join(" ")].filter(Boolean).join(", "),
   ].filter(Boolean).join("\n");
-  const termsDays = parsed.data.payment_terms_days ?? customer.payment_terms_days ?? 15;
+  const termsDays = parsed.data.payment_terms_days ?? customer.payment_terms_days ?? 30;
+  const issueDate = parsed.data.invoice_date;
+  const dueDate = formatYmd(addDays(new Date(`${issueDate}T00:00:00`), termsDays));
   const invoiceNumber = await allocateInvoiceNumber(supabase as any, user.id);
 
   const { data: invoice, error: invErr } = await supabase
@@ -67,8 +70,8 @@ export async function createInvoice(input: z.infer<typeof CreateSchema>) {
       customer_id: customer.id,
       invoice_number: invoiceNumber,
       status: "draft",
-      issue_date: formatYmd(new Date()),
-      due_date: parsed.data.due_date,
+      issue_date: issueDate,
+      due_date: dueDate,
       bill_to_company: customer.company_name,
       bill_to_contact: customer.contact_name,
       bill_to_email: customer.email,

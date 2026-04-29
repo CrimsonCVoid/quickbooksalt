@@ -37,7 +37,7 @@ export const brand = {
   defaultCheckInstructions: "",
 
   /** Default payment terms (Net N) */
-  defaultPaymentTermsDays: 15,
+  defaultPaymentTermsDays: 30,
 
   /** Default invoice number prefix — e.g. CCH-2026-0001 */
   invoiceNumberPrefix: "CCH",

@@ -72,7 +72,7 @@ export function CustomerForm({ customer }: { customer?: Customer }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="label">Payment terms (Net days)</label>
-          <input name="payment_terms_days" type="number" min={0} max={365} defaultValue={customer?.payment_terms_days ?? 15} className="input" />
+          <input name="payment_terms_days" type="number" min={0} max={365} defaultValue={customer?.payment_terms_days ?? 30} className="input" />
         </div>
         <div>
           <label className="label">Default payment method</label>

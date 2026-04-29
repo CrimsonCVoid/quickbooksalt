@@ -190,9 +190,11 @@ export async function generateInvoiceFromPlan(
     .eq("owner_id", ownerId)
     .maybeSingle();
 
-  const termsDays = plan.payment_terms_days ?? customer.payment_terms_days ?? settings?.default_terms_days ?? 15;
+  const termsDays = plan.payment_terms_days ?? customer.payment_terms_days ?? settings?.default_terms_days ?? 30;
+  // Issue today, payment due Net N from issue. The plan's next_due_date is the
+  // SERVICE date — separate concept from when the invoice is payable.
   const issueDate = new Date();
-  const dueDate = new Date(plan.next_due_date);
+  const dueDate = addDays(issueDate, termsDays);
   const subtotal = lineItemsTotal(lines);
   // Tax applied to full invoice (NC sources to destination; HVAC repair/maintenance
   // is taxable on filters + labor combined).
